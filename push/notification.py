@@ -11,7 +11,7 @@ from kombu.pools import producers
 
 from push import default_settings, models
 
-logger = logging.getLogger('push.notification')
+logger = logging.getLogger('push')
 
 amqp_exchange = kombu.Exchange(
     name=getattr(
@@ -77,9 +77,9 @@ class Notification:
             default_settings.PUSH_DEVICE_MODEL,
         ))
 
-    def delete_tokens(self, tokens, device_os):
+    def delete_tokens(self, tokens):
         self.device_model.objects.filter(
-            device_os=device_os.value,
+            device_os=self.device_os.value,
             push_token__in=tokens,
         ).delete()
 
@@ -113,7 +113,7 @@ class Notification:
                 'Some tokens (%i) failed and will be deleted',
                 len(result.failed),
             )
-            self.delete_tokens(result.failed.keys(), models.DeviceOS.iOS)
+            self.delete_tokens(result.failed.keys())
 
         for reason, explanation in result.errors:
             logger.error('%s: %s', reason, explanation)

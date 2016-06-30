@@ -1,0 +1,5 @@
+PUSH_APNS = {}
+
+PUSH_AMQP = None
+
+PUSH_QUEUE_TIMEOUT = None

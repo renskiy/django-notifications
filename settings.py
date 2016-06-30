@@ -15,6 +15,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
     'push',
 ]
 
@@ -38,3 +40,16 @@ DATABASES = {
 TIME_ZONE = 'UTC'
 
 USE_TZ = True
+
+
+# Push settings
+
+PUSH_AMQP = 'pyamqp://rabbitmq:rabbitmq@localhost:5672//'
+
+PUSH_APNS = dict(
+    address='push_sandbox',
+    cert_file=os.path.join(BASE_DIR, 'etc/cert/apns/pins.pem'),
+    passphrase='pins',
+)
+
+PUSH_QUEUE_TIMEOUT = 60

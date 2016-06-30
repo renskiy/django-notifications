@@ -52,12 +52,12 @@ class Notification:
         ))
 
     def send(self):
-        amqp.declare_all()
         with producers[amqp.connection].acquire(block=True) as producer:
             producer.publish(
                 self.to_dict(),
                 exchange=amqp.exchange,
                 routing_key=self.device_os.name,
+                declare=[amqp.exchange, amqp.apns_queue, amqp.gcm_queue],
                 serializer='json',
             )
 

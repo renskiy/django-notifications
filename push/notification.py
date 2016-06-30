@@ -1,11 +1,9 @@
-import functools
 import logging
 
 import apns_clerk as apns
 
 from django.apps import apps
 from django.conf import settings
-from kombu.common import maybe_declare
 from kombu.pools import producers
 
 from push import default_settings, models, amqp
@@ -13,14 +11,6 @@ from push import default_settings, models, amqp
 logger = logging.getLogger('push')
 
 apns_session = apns.Session()
-
-
-@functools.lru_cache(maxsize=1)
-def declare_all():
-    with amqp.connection.channel() as channel:
-        maybe_declare(amqp.exchange, channel)
-        maybe_declare(amqp.apns_queue, channel)
-        maybe_declare(amqp.gcm_queue, channel)
 
 
 class Notification:
@@ -62,7 +52,7 @@ class Notification:
         ))
 
     def send(self):
-        declare_all()
+        amqp.declare_all()
         with producers[amqp.connection].acquire(block=True) as producer:
             producer.publish(
                 self.to_dict(),

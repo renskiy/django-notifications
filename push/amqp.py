@@ -1,6 +1,9 @@
+import functools
+
 import kombu
 
 from django.conf import settings
+from kombu.common import maybe_declare
 
 from push import default_settings, models
 
@@ -30,3 +33,11 @@ gcm_queue = kombu.Queue(
     exchange=exchange,
     routing_key=models.DeviceOS.Android.name,
 )
+
+
+@functools.lru_cache(maxsize=1)
+def declare_all():
+    with connection.channel() as channel:
+        maybe_declare(exchange, channel)
+        maybe_declare(apns_queue, channel)
+        maybe_declare(gcm_queue, channel)

@@ -44,7 +44,7 @@ USE_TZ = True
 
 # Push settings
 
-PUSH_AMQP = 'pyamqp://rabbitmq:rabbitmq@localhost:5672//'
+PUSH_AMQP_CONNECTION = 'pyamqp://rabbitmq:rabbitmq@localhost:5672//'
 
 PUSH_APNS = dict(
     address='push_sandbox',
@@ -52,4 +52,4 @@ PUSH_APNS = dict(
     passphrase='pins',
 )
 
-PUSH_QUEUE_TIMEOUT = 60
+PUSH_WORKER_WAIT_TIMEOUT = 60

@@ -10,7 +10,8 @@ import kombu.message
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from push.models import Notification
+from push.models import DeviceOS
+from push.notification import Notification
 
 logger = logging.getLogger('push_notifications')
 
@@ -88,16 +89,21 @@ class Command(BaseCommand):
         message.ack()
 
     def handle(self, **options):
-        with kombu.Connection(settings.AMQP) as connection:
-            push_notifications = kombu.Queue(name='push_notifications')  # TODO move to settings
-            with connection.Consumer(
-                queues=[push_notifications],
-                callbacks=[self.on_notification],
-            ):
-                try:
-                    while True:
-                        connection.drain_events(
-                            timeout=settings.PUSH_QUEUE_TIMEOUT,
-                        )
-                except socket.timeout:
-                    pass
+        notification = Notification(
+            tokens='tokens',
+            device_os=DeviceOS.iOS,
+        )
+        notification.send()
+        # with kombu.Connection(settings.AMQP) as connection:
+        #     push_notifications = kombu.Queue(name='push_notifications')  # TODO move to settings
+        #     with connection.Consumer(
+        #         queues=[push_notifications],
+        #         callbacks=[self.on_notification],
+        #     ):
+        #         try:
+        #             while True:
+        #                 connection.drain_events(
+        #                     timeout=settings.PUSH_WORKER_WAIT_TIMEOUT,
+        #                 )
+        #         except socket.timeout:
+        #             pass

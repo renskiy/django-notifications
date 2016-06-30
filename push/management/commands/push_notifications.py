@@ -7,8 +7,8 @@ import kombu.message
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from push import default_settings
-from push.notification import Notification, apns_queue, gcm_queue, amqp_connection
+from push import default_settings, amqp
+from push.notification import Notification
 
 logger = logging.getLogger('push')
 
@@ -39,9 +39,9 @@ class Command(BaseCommand):
         # )
         # notification.send()
         logger.debug('Started listening PUSH notifications queue')
-        with amqp_connection as connection:
+        with amqp.connection as connection:
             with connection.Consumer(
-                queues=[apns_queue, gcm_queue],
+                queues=[amqp.apns_queue, amqp.gcm_queue],
                 callbacks=[self.on_notification],
             ):
                 try:

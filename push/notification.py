@@ -2,53 +2,25 @@ import functools
 import logging
 
 import apns_clerk as apns
-import kombu
 
 from django.apps import apps
 from django.conf import settings
 from kombu.common import maybe_declare
 from kombu.pools import producers
 
-from push import default_settings, models
+from push import default_settings, models, amqp
 
 logger = logging.getLogger('push')
-
-amqp_exchange = kombu.Exchange(
-    name=getattr(
-        settings,
-        'PUSH_AMQP_EXCHANGE',
-        default_settings.PUSH_AMQP_EXCHANGE,
-    ),
-    type='topic',
-)
-
-amqp_connection = kombu.Connection(getattr(
-    settings,
-    'PUSH_AMQP_CONNECTION',
-    default_settings.PUSH_AMQP_CONNECTION,
-))
-
-apns_queue = kombu.Queue(
-    'push.notifications.%s' % models.DeviceOS.iOS.name,
-    exchange=amqp_exchange,
-    routing_key=models.DeviceOS.iOS.name,
-)
-
-gcm_queue = kombu.Queue(
-    'push.notifications.%s' % models.DeviceOS.Android.name,
-    exchange=amqp_exchange,
-    routing_key=models.DeviceOS.Android.name,
-)
 
 apns_session = apns.Session()
 
 
 @functools.lru_cache(maxsize=1)
 def declare_all():
-    with amqp_connection.channel() as channel:
-        maybe_declare(amqp_exchange, channel)
-        maybe_declare(apns_queue, channel)
-        maybe_declare(gcm_queue, channel)
+    with amqp.connection.channel() as channel:
+        maybe_declare(amqp.exchange, channel)
+        maybe_declare(amqp.apns_queue, channel)
+        maybe_declare(amqp.gcm_queue, channel)
 
 
 class Notification:
@@ -91,10 +63,10 @@ class Notification:
 
     def send(self):
         declare_all()
-        with producers[amqp_connection].acquire(block=True) as producer:
+        with producers[amqp.connection].acquire(block=True) as producer:
             producer.publish(
                 self.to_dict(),
-                exchange=amqp_exchange,
+                exchange=amqp.exchange,
                 routing_key=self.device_os.name,
                 serializer='json',
             )

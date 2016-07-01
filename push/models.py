@@ -19,7 +19,7 @@ class DeviceBase(models.Model):
         unique_together = ['device_os', 'push_token']
         abstract = True
 
-    user = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='devices', related_query_name='device')
+    user = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='devices', related_query_name='device', null=True)
     device_locale = models.CharField(max_length=255, blank=True)
     device_os = models.SmallIntegerField(choices=(
         (DeviceOS.iOS.value, DeviceOS.iOS.name),
@@ -40,7 +40,7 @@ def get_device_model() -> DeviceBase:
     return apps.get_model(settings.PUSH_DEVICE_MODEL)
 
 
-def update_push_token(user, push_token, device_os, device_locale='', **extra):
+def update_push_token(push_token, device_os, user=None, device_locale='', **extra):
     if not push_token:
         return
     get_device_model().objects.update_or_create(

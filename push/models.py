@@ -42,10 +42,10 @@ def get_device_model() -> DeviceBase:
 
 def update_device_info(user, push_token, device_os, device_locale='', **extra):
     get_device_model().objects.update_or_create(
-        user=user,
-        device_os=DeviceOS(device_os).value,
         push_token=push_token,
+        device_os=DeviceOS(device_os).value,
         defaults=dict(
+            user=user,
             device_locale=device_locale,
             **extra
         ),

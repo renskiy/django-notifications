@@ -40,7 +40,9 @@ def get_device_model() -> DeviceBase:
     return apps.get_model(settings.PUSH_DEVICE_MODEL)
 
 
-def update_device_info(user, push_token, device_os, device_locale='', **extra):
+def update_push_token(user, push_token, device_os, device_locale='', **extra):
+    if not push_token:
+        return
     get_device_model().objects.update_or_create(
         push_token=push_token,
         device_os=DeviceOS(device_os).value,
@@ -50,3 +52,10 @@ def update_device_info(user, push_token, device_os, device_locale='', **extra):
             **extra
         ),
     )
+
+
+def delete_push_token(push_token, device_os):
+    get_device_model().objects.filter(
+        push_token=push_token,
+        device_os=DeviceOS(device_os).value,
+    ).delete()

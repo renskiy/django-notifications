@@ -2,18 +2,19 @@ import logging
 
 import apns_clerk as apns
 
+from django.utils.functional import cached_property
 from kombu.pools import producers
 
 from push import settings, models, amqp
 
-logger = logging.getLogger('push')
+apns_logger = logging.getLogger('push.apns')
+
+gcm_logger = logging.getLogger('push.gcm')
 
 apns_session = apns.Session()
 
 
 class Notification:
-
-    MAX_ATTEMPTS = 3
 
     def __init__(self, *, tokens, device_os, alert=None, **extra):
         self.tokens = tokens
@@ -39,7 +40,7 @@ class Notification:
             push_token__in=tokens,
         ).delete()
 
-    @property
+    @cached_property
     def apns(self):
         return apns.APNs(apns_session.get_connection(**settings.PUSH_APNS))
 
@@ -53,47 +54,45 @@ class Notification:
                 serializer='json',
             )
 
-    def send_immediately(self):
+    def send_immediately(self, retry=1):
         if self.device_os is models.DeviceOS.iOS:
-            self.send_to_apns()
+            self.send_to_apns(retry=retry)
         elif self.device_os is models.DeviceOS.Android:
-            self.send_to_gcm()
+            self.send_to_gcm(retry=retry)
 
-    def _apns_send_message(self, message, attempt=1):
+    def _apns_send_message(self, message, retry=1):
         result = self.apns.send(message)
 
         if result.failed:
-            logger.debug(
+            apns_logger.debug(
                 'Some tokens (%i) failed and will be deleted',
                 len(result.failed),
             )
             self.delete_tokens(result.failed.keys())
 
         for reason, explanation in result.errors:
-            logger.error('%s: %s', reason, explanation)
+            apns_logger.error('PUSH notification was not sent, reason: %s (%s)',
+                              reason, explanation)
 
         if result.needs_retry():
-            if attempt > self.MAX_ATTEMPTS:
-                logger.error(
-                    'MAX_ATTEMPTS=%i exceeded when trying to '
-                    'send PUSH notification',
-                    self.MAX_ATTEMPTS,
-                )
+            if retry <= 0:
+                apns_logger.error('PUSH notification was not sent, '
+                                  'reason: retry')
             else:
-                failed_message = result.retry()
-                logger.warning(
-                    'Message need to be sent again (attempt #%i)',
-                    attempt,
+                apns_logger.warning(
+                    'Message need to be sent again (attempts left: %i)',
+                    retry,
                 )
-                self._apns_send_message(failed_message, attempt + 1)
+                failed_message = result.retry()
+                self._apns_send_message(failed_message, retry - 1)
 
-    def send_to_apns(self):
+    def send_to_apns(self, retry=1):
         message = apns.Message(
             tokens=self.tokens,
             alert=self.alert,
             **self.extra
         )
-        self._apns_send_message(message)
+        self._apns_send_message(message, retry=retry)
 
-    def send_to_gcm(self):
+    def send_to_gcm(self, retry=1):
         pass

@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from push import settings, amqp
 from push.notification import Notification
 
-logger = logging.getLogger('push')
+logger = logging.getLogger('push.notifications')
 
 
 class Command(BaseCommand):
@@ -37,7 +37,7 @@ class Command(BaseCommand):
         #     device_os=DeviceOS.iOS,
         # )
         # notification.send()
-        logger.debug('Started listening PUSH notifications queue')
+        logger.debug('Started listening PUSH notifications queues')
         with amqp.connection as connection:
             with connection.Consumer(
                 queues=[amqp.apns_queue, amqp.gcm_queue],

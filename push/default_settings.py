@@ -1,9 +1,0 @@
-PUSH_APNS = {}
-
-PUSH_AMQP_CONNECTION = None
-
-PUSH_AMQP_EXCHANGE = 'push.notifications'
-
-PUSH_WORKER_WAIT_TIMEOUT = None
-
-PUSH_DEVICE_MODEL = 'push.Device'

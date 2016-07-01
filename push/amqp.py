@@ -1,23 +1,13 @@
 import kombu
 
-from django.conf import settings
-
-from push import default_settings, models
+from push import settings, models
 
 exchange = kombu.Exchange(
-    name=getattr(
-        settings,
-        'PUSH_AMQP_EXCHANGE',
-        default_settings.PUSH_AMQP_EXCHANGE,
-    ),
+    name=settings.PUSH_AMQP_EXCHANGE,
     type='topic',
 )
 
-connection = kombu.Connection(getattr(
-    settings,
-    'PUSH_AMQP_CONNECTION',
-    default_settings.PUSH_AMQP_CONNECTION,
-))
+connection = kombu.Connection(settings.PUSH_AMQP_CONNECTION)
 
 apns_queue = kombu.Queue(
     'push.notifications.%s' % models.DeviceOS.iOS.name,

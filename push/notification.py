@@ -2,11 +2,9 @@ import logging
 
 import apns_clerk as apns
 
-from django.apps import apps
-from django.conf import settings
 from kombu.pools import producers
 
-from push import default_settings, models, amqp
+from push import settings, models, amqp
 
 logger = logging.getLogger('push')
 
@@ -32,12 +30,8 @@ class Notification:
         )
 
     @property
-    def device_model(self) -> models.Device:
-        return apps.get_model(getattr(
-            settings,
-            'PUSH_DEVICE_MODEL',
-            default_settings.PUSH_DEVICE_MODEL,
-        ))
+    def device_model(self):
+        return models.get_device_model()
 
     def delete_tokens(self, tokens):
         self.device_model.objects.filter(
@@ -47,9 +41,7 @@ class Notification:
 
     @property
     def apns(self):
-        return apns.APNs(apns_session.get_connection(
-            **getattr(settings, 'PUSH_APNS', default_settings.PUSH_APNS)
-        ))
+        return apns.APNs(apns_session.get_connection(**settings.PUSH_APNS))
 
     def send(self):
         with producers[amqp.connection].acquire(block=True) as producer:

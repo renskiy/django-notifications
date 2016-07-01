@@ -4,10 +4,9 @@ import socket
 import kombu
 import kombu.message
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from push import default_settings, amqp
+from push import settings, amqp
 from push.notification import Notification
 
 logger = logging.getLogger('push')
@@ -46,10 +45,8 @@ class Command(BaseCommand):
             ):
                 try:
                     while True:
-                        connection.drain_events(timeout=getattr(
-                            settings,
-                            'PUSH_WORKER_WAIT_TIMEOUT',
-                            default_settings.PUSH_WORKER_WAIT_TIMEOUT,
-                        ))
+                        connection.drain_events(
+                            timeout=settings.PUSH_WORKER_WAIT_TIMEOUT,
+                        )
                 except socket.timeout:
                     pass

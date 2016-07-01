@@ -7,9 +7,9 @@ from kombu.pools import producers
 
 from push import settings, models, amqp
 
-apns_logger = logging.getLogger('push.apns')
+apns_logger = logging.getLogger('push.notifications.apns')
 
-gcm_logger = logging.getLogger('push.gcm')
+gcm_logger = logging.getLogger('push.notifications.gcm')
 
 apns_session = apns.Session()
 

@@ -40,7 +40,7 @@ class Command(BaseCommand):
         logger.debug('Started listening PUSH notifications queues')
         with amqp.connection as connection:
             with connection.Consumer(
-                queues=[amqp.apns_queue, amqp.gcm_queue],
+                queues=[amqp.apns_queue, amqp.fcm_queue],
                 callbacks=[self.on_notification],
             ):
                 try:

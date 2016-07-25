@@ -1,6 +1,7 @@
 import logging
 
 import apns_clerk as apns
+import pyfcm as fcm
 
 from django.utils.functional import cached_property
 from kombu.pools import producers
@@ -9,7 +10,7 @@ from push import settings, models, amqp
 
 apns_logger = logging.getLogger('push.notifications.apns')
 
-gcm_logger = logging.getLogger('push.notifications.gcm')
+fcm_logger = logging.getLogger('push.notifications.fcm')
 
 apns_session = apns.Session()
 
@@ -44,13 +45,17 @@ class Notification:
     def apns(self):
         return apns.APNs(apns_session.get_connection(**settings.PUSH_APNS))
 
+    @cached_property
+    def fcm(self):
+        return fcm.FCMNotification(**settings.PUSH_FCM)
+
     def send(self):
         with producers[amqp.connection].acquire(block=True) as producer:
             producer.publish(
                 self.to_dict(),
                 exchange=amqp.exchange,
                 routing_key=self.device_os.name,
-                declare=[amqp.exchange, amqp.apns_queue, amqp.gcm_queue],
+                declare=[amqp.exchange, amqp.apns_queue, amqp.fcm_queue],
                 serializer='json',
             )
 
@@ -58,7 +63,7 @@ class Notification:
         if self.device_os is models.DeviceOS.iOS:
             self.send_to_apns(retry=retry)
         elif self.device_os is models.DeviceOS.Android:
-            self.send_to_gcm(retry=retry)
+            self.send_to_fcm(retry=retry)
 
     def _apns_send_message(self, message, retry=1):
         result = self.apns.send(message)
@@ -94,5 +99,19 @@ class Notification:
         )
         self._apns_send_message(message, retry=retry)
 
-    def send_to_gcm(self, retry=1):
-        pass
+    def send_to_fcm(self, retry=1):
+        operation_result = self.fcm.notify_multiple_devices(
+            registration_ids=self.tokens,
+            message_body=self.alert,
+            **self.extra
+        )
+
+        if 'results' in operation_result:
+            for notification_result in operation_result['results']:
+                if 'error' in notification_result:
+                    error = notification_result['error']
+                    if error:
+                        fcm_logger.error(
+                            'PUSH notification was not sent, reason: %s',
+                            error
+                        )

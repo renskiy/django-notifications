@@ -15,7 +15,7 @@ apns_queue = kombu.Queue(
     routing_key=models.DeviceOS.iOS.name,
 )
 
-gcm_queue = kombu.Queue(
+fcm_queue = kombu.Queue(
     settings.PUSH_AMQP_QUEUE_PREFIX + models.DeviceOS.Android.name,
     exchange=exchange,
     routing_key=models.DeviceOS.Android.name,

@@ -106,12 +106,10 @@ class Notification:
             **self.extra
         )
 
-        if 'results' in operation_result:
-            for notification_result in operation_result['results']:
-                if 'error' in notification_result:
-                    error = notification_result['error']
-                    if error:
-                        fcm_logger.error(
-                            'PUSH notification was not sent, reason: %s',
-                            error
-                        )
+        for notification_result in operation_result.get('results', ()):
+            error = notification_result('error')
+            if error:
+                fcm_logger.error(
+                    'PUSH notification was not sent, reason: %s',
+                    error,
+                )

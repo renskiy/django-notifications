@@ -21,7 +21,12 @@ class Command(BaseCommand):
             len(message.body),
         )
         try:
-            notification = Notification(**body)
+            notification = Notification(
+                tokens=body['tokens'],
+                device_os=body['device_os'],
+                alert=body['alert'],
+                **body['extra'],
+            )
         except (ValueError, TypeError):
             logger.error('Skipped invalid AMQP message body: %s', body)
         else:
@@ -32,11 +37,7 @@ class Command(BaseCommand):
         message.ack()
 
     def handle(self, **options):
-        # notification = Notification(
-        #     tokens='tokens',
-        #     device_os=DeviceOS.iOS,
-        # )
-        # notification.send()
+
         logger.debug('Started listening PUSH notifications queues')
         with amqp.connection as connection:
             with connection.Consumer(

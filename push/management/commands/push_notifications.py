@@ -21,12 +21,7 @@ class Command(BaseCommand):
             len(message.body),
         )
         try:
-            notification = Notification(
-                tokens=body['tokens'],
-                device_os=body['device_os'],
-                alert=body['alert'],
-                **body['extra'],
-            )
+            notification = Notification(**body)
         except (ValueError, TypeError):
             logger.error('Skipped invalid AMQP message body: %s', body)
         else:

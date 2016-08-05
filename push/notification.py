@@ -28,7 +28,7 @@ class Notification:
             tokens=self.tokens,
             device_os=self.device_os.value,
             alert=self.alert,
-            extra=self.extra,
+            **self.extra,
         )
 
     @property

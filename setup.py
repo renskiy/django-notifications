@@ -26,6 +26,6 @@ setup(
     install_requires=[
         'kombu>=3.0,<4.0',
         'apns-clerk>=0.2,<0.3',
-        'pyfcm>=1.0,<2.0',
+        'pyfcm>=1.1,<1.2',
     ],
 )

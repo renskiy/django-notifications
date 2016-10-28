@@ -1,4 +1,4 @@
 Django>=1.9                 # WEB framework
 apns-clerk==0.2.*           # APNS client
-pyfcm==1.0.*                # Google Firebase Cloud Messaging client
+pyfcm==1.1.*                # Google Firebase Cloud Messaging client
 kombu==3.0.*                # Messaging library

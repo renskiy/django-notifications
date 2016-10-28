@@ -6,9 +6,9 @@ import kombu.message
 
 from django.core.management.base import BaseCommand
 
-from push import settings, amqp, notification
+from django_push import settings, amqp, notification
 
-logger = logging.getLogger('push.notifications')
+logger = logging.getLogger('django_push')
 
 
 class Command(BaseCommand):
@@ -20,7 +20,7 @@ class Command(BaseCommand):
             len(message.body),
         )
         try:
-            push_notification = notification.Notification(**body)
+            push_notification = notification.PushNotification(**body)
         except (ValueError, TypeError):
             logger.error('Skipped invalid AMQP message body: %s', body)
         else:
@@ -40,7 +40,7 @@ class Command(BaseCommand):
                 try:
                     while True:
                         connection.drain_events(
-                            timeout=settings.PUSH_WORKER_WAIT_TIMEOUT,
+                            timeout=settings.DJANGO_PUSH_WORKER_WAIT_TIMEOUT,
                         )
                 except (socket.timeout, KeyboardInterrupt):
                     pass

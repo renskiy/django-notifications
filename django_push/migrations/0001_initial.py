@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='devices', related_query_name='device', to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'swappable': 'PUSH_DEVICE_MODEL',
+                'swappable': 'DJANGO_PUSH_DEVICE_MODEL',
             },
         ),
     ]

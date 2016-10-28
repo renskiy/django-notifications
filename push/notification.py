@@ -78,13 +78,17 @@ class Notification:
             self.delete_tokens(result.failed.keys())
 
         for reason, explanation in result.errors:
-            apns_logger.error('PUSH notification was not sent, reason: %s (%s)',
-                              reason, explanation)
+            apns_logger.error(
+                'PUSH notification was not sent, reason: %s (%s)',
+                reason,
+                explanation
+            )
 
         if result.needs_retry():
             if retry <= 0:
-                apns_logger.error('PUSH notification was not sent, '
-                                  'reason: retry')
+                apns_logger.error(
+                    'PUSH notification was not sent, reason: retry'
+                )
             else:
                 apns_logger.warning(
                     'Message need to be sent again (attempts left: %i)',
@@ -102,13 +106,15 @@ class Notification:
         self._apns_send_message(message, retry=retry)
 
     def send_to_fcm(self, retry=1):
-        operation_result = self.fcm.notify_multiple_devices(
+
+        operation_responses = self.fcm.notify_multiple_devices(
             registration_ids=self.tokens,
             message_body=self.alert,
             **self.extra
         )
 
-        for notification_result in operation_result.get('results', ()):
+        for operation_response in operation_responses:
+            notification_result = operation_response.get('results', dict())
             error = notification_result.get('error')
             if error:
                 fcm_logger.error(
